@@ -13,14 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Pester
-        shell: pwsh
-        run: Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -SkipPublisherCheck
-
       - name: Parse PowerShell sources
         shell: pwsh
         run: ./tests/Parse.Tests.ps1
 
-      - name: Run Pester tests
+      - name: Run behavior tests
         shell: pwsh
-        run: Invoke-Pester ./tests -Output Detailed
+        run: ./tests/Run.Tests.ps1
