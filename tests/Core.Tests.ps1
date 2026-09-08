@@ -22,8 +22,8 @@ Assert-SysInTrue ($null -ne $cap.Battery) 'capabilities exposes battery state'
 function Invoke-CoreCliSnapshotTest {
     param([string[]]$Arguments, [string]$ExpectedPattern)
     $output = & pwsh -NoLogo -NoProfile -File $cli @Arguments 2>&1 | Out-String
-    Assert-SysInEqual $LASTEXITCODE 0 ("CLI exits 0 for: " + ($Arguments -join ' '))
-    Assert-SysInMatch $output $ExpectedPattern ("CLI output matches for: " + ($Arguments -join ' '))
+    Assert-SysInEqual $LASTEXITCODE 0 (("CLI exits 0 for: " + ($Arguments -join ' ')) + "`nCaptured output:`n$output")
+    Assert-SysInMatch $output $ExpectedPattern (("CLI output matches for: " + ($Arguments -join ' ')) + "`nCaptured output:`n$output")
 }
 
 Invoke-CoreCliSnapshotTest @('-CPU','-Snapshot') 'CPU'
