@@ -48,6 +48,13 @@ COMMANDS
   help           Show this help
   about          Show product information
 
+CONFIG
+  sysin config [show]
+  sysin config get <key>
+  sysin config set <key> <value>
+  sysin config reset
+  sysin config path
+
 GLOBAL OPTIONS
   -FPS <1-20>    Dashboard render target (default 20)
   -Compact       Compact dashboard layout
@@ -87,6 +94,46 @@ function Resolve-SysInCommand {
     }
 }
 
+function Invoke-SysInConfigCommand {
+    param([string[]]$Tokens)
+
+    $configModule = Join-Path $PSScriptRoot 'SysIn.Config.psm1'
+    if (-not (Test-Path -LiteralPath $configModule)) {
+        throw "SysIn runtime is incomplete: missing $configModule"
+    }
+    Import-Module $configModule -Force
+
+    $sub = if ($Tokens.Count -ge 2) { ([string]$Tokens[1]).ToLowerInvariant() } else { 'show' }
+    switch ($sub) {
+        'show' {
+            $config = Get-SysInConfig
+            Write-Output "fps=$($config.fps)"
+            Write-Output "updateChannel=$($config.updateChannel)"
+            Write-Output "updateCheck=$($config.updateCheck)"
+        }
+        'get' {
+            if ($Tokens.Count -lt 3) { throw 'Usage: sysin config get <key>' }
+            $key = [string]$Tokens[2]
+            $config = Get-SysInConfig
+            $property = $config.PSObject.Properties | Where-Object { $_.Name -ieq $key } | Select-Object -First 1
+            if ($null -eq $property) { throw "Unknown SysIn configuration key '$key'." }
+            Write-Output $property.Value
+        }
+        'set' {
+            if ($Tokens.Count -lt 4) { throw 'Usage: sysin config set <key> <value>' }
+            $config = Set-SysInConfigValue -Key ([string]$Tokens[2]) -Value $Tokens[3]
+            $property = $config.PSObject.Properties | Where-Object { $_.Name -ieq ([string]$Tokens[2]) } | Select-Object -First 1
+            Write-Output "$($property.Name)=$($property.Value)"
+        }
+        'reset' {
+            [void](Reset-SysInConfig)
+            Write-Output 'SysIn configuration reset to defaults.'
+        }
+        'path' { Write-Output (Get-SysInConfigPath) }
+        default { throw "Unknown config command '$sub'. Use: show, get, set, reset, path." }
+    }
+}
+
 $tokens = @($args)
 $command = Resolve-SysInCommand -Tokens $tokens
 
@@ -95,6 +142,7 @@ try {
         'version' { Write-SysInVersion; exit 0 }
         'help' { Write-SysInHelp; exit 0 }
         'about' { Write-SysInAbout; exit 0 }
+        'config' { Invoke-SysInConfigCommand -Tokens $tokens; exit 0 }
         default {
             $modulePath = Join-Path $PSScriptRoot 'SysIn.Core.psm1'
             if (-not (Test-Path -LiteralPath $modulePath)) {
