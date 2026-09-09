@@ -86,7 +86,7 @@ try {
     [void](Set-SysInConfigValue -Key 'fps' -Value '12')
 
     $coreModule = Get-Module SysIn.Core
-    $configuredFps = & $coreModule {
+    $capturedFps = & $coreModule {
         $script:CapturedDashboardFps = $null
         function Invoke-SysIn {
             param(
@@ -97,17 +97,18 @@ try {
             )
             $script:CapturedDashboardFps = $FPS
         }
-        Invoke-SysInCommand -Command 'overview' -Arguments @()
-        return $script:CapturedDashboardFps
-    }
-    Assert-SysInEqual $configuredFps 12 'dashboard dispatcher uses persisted FPS when CLI override is absent'
 
-    $overrideFps = & $coreModule {
+        Invoke-SysInCommand -Command 'overview' -Arguments @()
+        $configured = $script:CapturedDashboardFps
+
         $script:CapturedDashboardFps = $null
         Invoke-SysInCommand -Command 'overview' -Arguments @('-FPS','7')
-        return $script:CapturedDashboardFps
+        $override = $script:CapturedDashboardFps
+
+        [pscustomobject]@{Configured=$configured;Override=$override}
     }
-    Assert-SysInEqual $overrideFps 7 'dashboard dispatcher gives explicit FPS precedence over persisted configuration'
+    Assert-SysInEqual $capturedFps.Configured 12 'dashboard dispatcher uses persisted FPS when CLI override is absent'
+    Assert-SysInEqual $capturedFps.Override 7 'dashboard dispatcher gives explicit FPS precedence over persisted configuration'
 } finally {
     $env:LOCALAPPDATA = $oldFpsLocalApp
     Remove-Module SysIn.Config -Force -ErrorAction SilentlyContinue
