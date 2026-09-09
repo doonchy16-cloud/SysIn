@@ -17,10 +17,15 @@ try {
             New-Item -ItemType Directory -Path $parent -Force | Out-Null
         }
 
-        Invoke-WebRequest -Uri ([string]$entry.url) -OutFile $destination -UseBasicParsing -ErrorAction Stop
+        $downloadUri = [string]$entry.url
+        if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_SHA) -and $env:GITHUB_REF_NAME -ne 'main') {
+            $downloadUri = $downloadUri.Replace('/main/', "/$($env:GITHUB_SHA)/")
+        }
+
+        Invoke-WebRequest -Uri $downloadUri -OutFile $destination -UseBasicParsing -ErrorAction Stop
         $actual = (Get-FileHash -LiteralPath $destination -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
         $expected = ([string]$entry.sha256).ToLowerInvariant()
-        Write-Host ("PUBLISHED_HASH|{0}|{1}" -f $relative,$actual)
+        Write-Host ("PUBLISHED_HASH|{0}|{1}|{2}" -f $relative,$actual,$downloadUri)
         if ($actual -ne $expected) {
             $mismatches.Add(("{0}: expected {1}, published {2}" -f $relative,$expected,$actual))
         }
