@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  windows-native:
+  native-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +26,83 @@ jobs:
 
       - name: Build native solution
         shell: pwsh
-        run: dotnet build .\SysIn.sln -c Debug --no-restore
+        run: dotnet build .\SysIn.sln -c Release --no-restore
 
       - name: Run native tests
         shell: pwsh
-        run: dotnet test .\tests\Native\SysIn.Native.Tests\SysIn.Native.Tests.csproj -c Debug --no-build
+        run: dotnet test .\tests\Native\SysIn.Native.Tests\SysIn.Native.Tests.csproj -c Release --no-build --logger "console;verbosity=normal"
 
-      - name: Run existing V1.1 regression suite
+      - name: Publish self-contained win-x64 preview
         shell: pwsh
-        run: pwsh -NoProfile -File .\tests\Run.Tests.ps1
+        run: dotnet publish .\src\SysIn.App\SysIn.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o .\artifacts\native-preview\win-x64
+
+      - name: Validate preview CLI and collect evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $PWD 'artifacts\evidence'
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          $exe = Join-Path $PWD 'artifacts\native-preview\win-x64\SysIn.App.exe'
+          if (-not (Test-Path -LiteralPath $exe)) { throw "Preview executable not found: $exe" }
+
+          & $exe version | Tee-Object -FilePath (Join-Path $evidence 'version.txt')
+          if ($LASTEXITCODE -ne 0) { throw "version failed with exit code $LASTEXITCODE" }
+
+          & $exe help | Tee-Object -FilePath (Join-Path $evidence 'help.txt')
+          if ($LASTEXITCODE -ne 0) { throw "help failed with exit code $LASTEXITCODE" }
+
+          $jsonPath = Join-Path $evidence 'snapshot.json'
+          & $exe snapshot --json | Set-Content -LiteralPath $jsonPath -Encoding utf8NoBOM
+          if ($LASTEXITCODE -ne 0) { throw "snapshot --json failed with exit code $LASTEXITCODE" }
+          Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json | Out-Null
+
+          & $exe snapshot | Set-Content -LiteralPath (Join-Path $evidence 'snapshot.txt') -Encoding utf8NoBOM
+          if ($LASTEXITCODE -ne 0) { throw "snapshot failed with exit code $LASTEXITCODE" }
+
+          & $exe doctor | Tee-Object -FilePath (Join-Path $evidence 'doctor.txt')
+          $doctorExit = $LASTEXITCODE
+          if ($doctorExit -gt 1) { throw "doctor failed unexpectedly with exit code $doctorExit" }
+
+          & $exe overview *> (Join-Path $evidence 'overview-noninteractive.txt')
+          $overviewExit = $LASTEXITCODE
+          if ($overviewExit -ne 2) { throw "noninteractive overview expected exit code 2, got $overviewExit" }
+
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          $hash | Set-Content -LiteralPath (Join-Path $evidence 'SysIn.App.exe.sha256') -Encoding ascii
+          "commit=$env:GITHUB_SHA" | Set-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
+          "rid=win-x64" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
+          "doctorExit=$doctorExit" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
+          "overviewNoninteractiveExit=$overviewExit" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
+
+      - name: Upload Overview render captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-overview-render-captures
+          path: artifacts/render-captures/
+          if-no-files-found: error
+
+      - name: Upload native win-x64 preview and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-preview-win-x64
+          path: |
+            artifacts/native-preview/win-x64/
+            artifacts/evidence/
+          if-no-files-found: error
+
+  v1-legacy-regression:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run V1.1 regression on PowerShell 7
+        shell: pwsh
+        env:
+          SYSIN_TEST_HOST: pwsh
+        run: .\tests\Run.Tests.ps1
+
+      - name: Run V1.1 regression on Windows PowerShell 5.1
+        shell: powershell
+        env:
+          SYSIN_TEST_HOST: powershell.exe
+        run: .\tests\Run.Tests.ps1
