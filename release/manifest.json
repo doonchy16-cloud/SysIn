@@ -7,7 +7,7 @@
     {
       "target": "SysIn.cmd",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/SysIn.cmd",
-      "sha256": "8d8e8977c17e94b022ee7f6acdeeba826d5d1c355e4a2a069b25c9e87c3ed05f"
+      "sha256": "a1a92337c62d3bb66709fa370b8f18493900bf087c4b01ae49a14cae76cb307d"
     },
     {
       "target": "src/SysIn.ps1",
