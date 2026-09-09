@@ -1,5 +1,6 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $modulePath = Join-Path $repoRoot 'src\SysIn.Config.psm1'
+$testHost = if ([string]::IsNullOrWhiteSpace($env:SYSIN_TEST_HOST)) { 'pwsh' } else { $env:SYSIN_TEST_HOST }
 Import-Module $modulePath -Force
 
 $oldLocalAppData = $env:LOCALAPPDATA
@@ -15,10 +16,16 @@ try {
     Assert-SysInEqual $config.fps 20 'default fps is 20'
     Assert-SysInEqual $config.updateChannel 'stable' 'default channel is stable'
     Assert-SysInEqual $config.updateCheck 'manual' 'default update check is manual'
+    Assert-SysInEqual (Get-SysInEffectiveFps -Arguments @()) 20 'effective FPS uses default configuration when no CLI override exists'
 
     Set-SysInConfigValue -Key 'fps' -Value '12'
     $config = Get-SysInConfig
     Assert-SysInEqual $config.fps 12 'valid fps persists'
+    Assert-SysInEqual (Get-SysInEffectiveFps -Arguments @()) 12 'effective FPS uses persisted configuration'
+    Assert-SysInEqual (Get-SysInEffectiveFps -Arguments @('overview','-FPS','7')) 7 'explicit -FPS overrides persisted configuration'
+    Assert-SysInEqual (Get-SysInEffectiveFps -Arguments @('overview','--fps','9')) 9 'explicit --fps overrides persisted configuration'
+    Assert-SysInThrows { Get-SysInEffectiveFps -Arguments @('overview','-FPS','0') } 'effective FPS rejects out-of-range explicit override'
+    Assert-SysInThrows { Get-SysInEffectiveFps -Arguments @('overview','-FPS') } 'effective FPS rejects missing explicit override value'
 
     Set-SysInConfigValue -Key 'updateCheck' -Value 'daily'
     $config = Get-SysInConfig
@@ -37,7 +44,7 @@ try {
     Assert-SysInEqual $config.updateCheck 'manual' 'reset restores manual update checks'
 
     $cli = Join-Path $repoRoot 'src\SysIn.ps1'
-    $cliOut = & pwsh -NoLogo -NoProfile -File $cli config path 2>&1 | Out-String
+    $cliOut = & $testHost -NoLogo -NoProfile -File $cli config path 2>&1 | Out-String
     Assert-SysInEqual $LASTEXITCODE 0 'config path CLI exits 0'
     Assert-SysInMatch $cliOut ([regex]::Escape($expectedPath)) 'config path CLI prints the config path'
 } finally {
