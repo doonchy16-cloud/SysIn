@@ -1,6 +1,7 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $cli = Join-Path $repoRoot 'src\SysIn.ps1'
 $core = Join-Path $repoRoot 'src\SysIn.Core.psm1'
+$testHost = if ([string]::IsNullOrWhiteSpace($env:SYSIN_TEST_HOST)) { 'pwsh' } else { $env:SYSIN_TEST_HOST }
 
 Import-Module $core -Force
 
@@ -59,7 +60,7 @@ try {
 
 function Invoke-CoreCliSnapshotTest {
     param([string[]]$Arguments, [string]$ExpectedPattern)
-    $output = & pwsh -NoLogo -NoProfile -File $cli @Arguments 2>&1 | Out-String
+    $output = & $testHost -NoLogo -NoProfile -File $cli @Arguments 2>&1 | Out-String
     Assert-SysInEqual $LASTEXITCODE 0 (("CLI exits 0 for: " + ($Arguments -join ' ')) + "`nCaptured output:`n$output")
     Assert-SysInMatch $output $ExpectedPattern (("CLI output matches for: " + ($Arguments -join ' ')) + "`nCaptured output:`n$output")
 }
