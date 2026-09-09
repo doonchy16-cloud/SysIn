@@ -12,12 +12,12 @@
     {
       "target": "src/SysIn.ps1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.ps1",
-      "sha256": "becf39334ae6d159204a705052177feb78973534cd73c11ad8feda1d93bdc4d0"
+      "sha256": "7575eef52b4353204c9f508da1af41a5f4668959f5b0d30178008add087ee11f"
     },
     {
       "target": "src/SysIn.Core.psm1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Core.psm1",
-      "sha256": "da500d83c546e0cc38604d2b456a52f387fc6638edc31ed69a6e93135b0b4893"
+      "sha256": "f4d772f1ee7469bf761433114032b04fe70319f02e085e5bc72960a267061113"
     },
     {
       "target": "src/SysIn.Config.psm1",
