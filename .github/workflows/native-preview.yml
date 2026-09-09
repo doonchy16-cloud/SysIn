@@ -40,8 +40,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if (Test-Path variable:PSNativeCommandUseErrorActionPreference) {
+          Write-Host "PS_VERSION=$($PSVersionTable.PSVersion)"
+          $nativePreferenceExists = Test-Path variable:PSNativeCommandUseErrorActionPreference
+          Write-Host "PSNATIVE_PREF_EXISTS=$nativePreferenceExists"
+          if ($nativePreferenceExists) {
+            Write-Host "PSNATIVE_PREF_VALUE=$PSNativeCommandUseErrorActionPreference"
             $PSNativeCommandUseErrorActionPreference = $false
+            Write-Host "PSNATIVE_PREF_AFTER=$PSNativeCommandUseErrorActionPreference"
           }
           $evidence = Join-Path $PWD 'artifacts\evidence'
           New-Item -ItemType Directory -Force -Path $evidence | Out-Null
@@ -64,10 +69,21 @@ jobs:
 
           & $exe doctor | Tee-Object -FilePath (Join-Path $evidence 'doctor.txt')
           $doctorExit = $LASTEXITCODE
+          Write-Host "DOCTOR_EXIT=$doctorExit"
           if ($doctorExit -gt 1) { throw "doctor failed unexpectedly with exit code $doctorExit" }
 
-          & $exe overview *> (Join-Path $evidence 'overview-noninteractive.txt')
-          $overviewExit = $LASTEXITCODE
+          try {
+            & $exe overview *> (Join-Path $evidence 'overview-noninteractive.txt')
+            $overviewExit = $LASTEXITCODE
+            Write-Host "OVERVIEW_RETURNED=1"
+            Write-Host "OVERVIEW_EXIT=$overviewExit"
+          }
+          catch {
+            Write-Host "OVERVIEW_EXCEPTION=$($_.Exception.GetType().FullName)"
+            Write-Host "OVERVIEW_EXCEPTION_MESSAGE=$($_.Exception.Message)"
+            Write-Host "OVERVIEW_LASTEXITCODE=$LASTEXITCODE"
+            throw
+          }
           if ($overviewExit -ne 2) { throw "noninteractive overview expected exit code 2, got $overviewExit" }
 
           $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
