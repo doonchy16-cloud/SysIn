@@ -6,6 +6,7 @@ $manifest = Get-Content -LiteralPath $manifestPath -Raw -ErrorAction Stop | Conv
 
 $workRoot = Join-Path ([IO.Path]::GetTempPath()) ('sysin-published-release-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $workRoot -Force | Out-Null
+$mismatches = New-Object System.Collections.Generic.List[string]
 
 try {
     foreach ($entry in @($manifest.files)) {
@@ -20,8 +21,12 @@ try {
         $actual = (Get-FileHash -LiteralPath $destination -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
         $expected = ([string]$entry.sha256).ToLowerInvariant()
         Write-Host ("PUBLISHED_HASH|{0}|{1}" -f $relative,$actual)
-        Assert-SysInEqual $actual $expected "published SHA-256 matches manifest for: $relative"
+        if ($actual -ne $expected) {
+            $mismatches.Add(("{0}: expected {1}, published {2}" -f $relative,$expected,$actual))
+        }
     }
+
+    Assert-SysInEqual $mismatches.Count 0 ("all published runtime SHA-256 values match the release manifest`n" + ($mismatches -join "`n"))
 } finally {
     Remove-Item -LiteralPath $workRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
