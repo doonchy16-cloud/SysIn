@@ -40,6 +40,9 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          if (Test-Path variable:PSNativeCommandUseErrorActionPreference) {
+            $PSNativeCommandUseErrorActionPreference = $false
+          }
           $evidence = Join-Path $PWD 'artifacts\evidence'
           New-Item -ItemType Directory -Force -Path $evidence | Out-Null
           $exe = Join-Path $PWD 'artifacts\native-preview\win-x64\SysIn.App.exe'
