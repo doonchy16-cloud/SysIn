@@ -108,7 +108,7 @@ function Invoke-SysInDoctor {
     $checks.Add([pscustomobject]@{Name='Providers';Status=$providerStatus;Detail=$providerDetail})
 
     $overall=if(@($checks|Where-Object Status -eq 'FAIL').Count -gt 0){'FAIL'}elseif(@($checks|Where-Object Status -eq 'PARTIAL').Count -gt 0){'PARTIAL'}else{'PASS'}
-    [pscustomobject]@{OverallStatus=$overall;Checks=@($checks)}
+    [pscustomobject]@{OverallStatus=$overall;Checks=$checks.ToArray()}
 }
 function Write-DoctorView{$d=Invoke-SysInDoctor;Write-Output "SysIn v$script:SysInVersion | DOCTOR";foreach($check in @($d.Checks)){Write-Output ('{0,-28} {1,-7} {2}'-f$check.Name,$check.Status,$check.Detail)};Write-Output ('Overall                      '+$d.OverallStatus)}
 function HasOpt([string[]]$a,[string[]]$n){foreach($x in $a){if($x.ToLowerInvariant()-in$n){return $true}};$false}
