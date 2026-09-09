@@ -23,7 +23,20 @@ $doctorLocalApp = Join-Path ([IO.Path]::GetTempPath()) ('sysin-doctor-' + [guid]
 $oldLocalApp = $env:LOCALAPPDATA
 try {
     $env:LOCALAPPDATA = $doctorLocalApp
-    $doctor = Invoke-SysInDoctor -InstallRoot $repoRoot -UserPath $repoRoot
+    try {
+        $doctor = Invoke-SysInDoctor -InstallRoot $repoRoot -UserPath $repoRoot
+    } catch {
+        Write-Host '=== DOCTOR EXCEPTION DIAGNOSTICS ==='
+        Write-Host ('Type: ' + $_.Exception.GetType().FullName)
+        Write-Host ('Message: ' + $_.Exception.Message)
+        Write-Host ('ScriptStackTrace: ' + $_.ScriptStackTrace)
+        Write-Host ('Position: ' + $_.InvocationInfo.PositionMessage)
+        if ($_.Exception.InnerException) {
+            Write-Host ('InnerType: ' + $_.Exception.InnerException.GetType().FullName)
+            Write-Host ('InnerMessage: ' + $_.Exception.InnerException.Message)
+        }
+        throw
+    }
     $checks = @{}
     foreach ($check in @($doctor.Checks)) { $checks[[string]$check.Name] = [string]$check.Status }
     Assert-SysInEqual $checks['Windows runtime'] 'PASS' 'doctor verifies Windows runtime'
