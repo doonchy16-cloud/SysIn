@@ -28,30 +28,9 @@ jobs:
         shell: pwsh
         run: dotnet build .\SysIn.sln -c Release --no-restore
 
-      - name: Diagnose Release test discovery
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Continue'
-          $testDir = Join-Path $PWD 'tests\Native\SysIn.Native.Tests\bin\Release\net10.0-windows'
-          Write-Host '=== Release output ==='
-          Get-ChildItem -LiteralPath $testDir | Sort-Object Name | Format-Table Name, Length
-
-          $testExe = Join-Path $testDir 'SysIn.Native.Tests.exe'
-          Write-Host "TEST_EXE_EXISTS=$([bool](Test-Path -LiteralPath $testExe))"
-          if (Test-Path -LiteralPath $testExe) {
-            Write-Host '=== Direct Release test executable ==='
-            & $testExe
-            Write-Host "DIRECT_TEST_EXIT=$LASTEXITCODE"
-          }
-
-          Write-Host '=== dotnet test Release without logger ==='
-          dotnet test .\tests\Native\SysIn.Native.Tests\SysIn.Native.Tests.csproj -c Release --no-build
-          Write-Host "DOTNET_TEST_NO_LOGGER_EXIT=$LASTEXITCODE"
-          exit 0
-
       - name: Run native tests
         shell: pwsh
-        run: dotnet test .\tests\Native\SysIn.Native.Tests\SysIn.Native.Tests.csproj -c Release --no-build --logger "console;verbosity=normal"
+        run: dotnet test .\tests\Native\SysIn.Native.Tests\SysIn.Native.Tests.csproj -c Release --no-build
 
       - name: Publish self-contained win-x64 preview
         shell: pwsh
