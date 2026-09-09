@@ -4,6 +4,8 @@ namespace SysIn.Views;
 
 public sealed class OverviewRenderer
 {
+    private const string PreviewCommandBar = "[P] Pause  [F] FPS  [Q] Quit";
+
     public void Render(
         OverviewViewModel model,
         FrameBuffer frame,
@@ -60,7 +62,7 @@ public sealed class OverviewRenderer
         Row(frame, ref row, "PROVIDERS", model.ProviderHealth, theme.Processes.Bright, theme);
 
         Components.Fill(frame, 0, frame.Height - 2, frame.Width, 2, theme.Raised);
-        frame.WriteText("[1] Overview  [/] Search  [P] Pause  [?] Help  [Q] Quit", 1, frame.Height - 1,
+        frame.WriteText(PreviewCommandBar, 1, frame.Height - 1,
             theme.TextPrimary, theme.Raised, clip: true);
     }
 
@@ -207,10 +209,8 @@ public sealed class OverviewRenderer
         }
 
         Components.Fill(frame, 0, frame.Height - 2, frame.Width, 2, theme.Raised);
-        const string fullCommandBar = "[1] Overview [2] CPU [3] GPU [4] Memory [5] Storage [6] Network [/] Search [P] Pause [?] Help [Q] Quit";
-        const string compactCommandBar = "[1] Overview  [/] Search  [P] Pause  [?] Help  [Q] Quit";
-        var commandBar = fullCommandBar.Length <= frame.Width - 1 ? fullCommandBar : compactCommandBar;
-        frame.WriteText(commandBar, 1, frame.Height - 1, theme.TextPrimary, theme.Raised, clip: true);
+        frame.WriteText(PreviewCommandBar, 1, frame.Height - 1,
+            theme.TextPrimary, theme.Raised, clip: true);
     }
 
     private static void SummaryCard(
