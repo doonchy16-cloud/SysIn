@@ -40,14 +40,6 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          Write-Host "PS_VERSION=$($PSVersionTable.PSVersion)"
-          $nativePreferenceExists = Test-Path variable:PSNativeCommandUseErrorActionPreference
-          Write-Host "PSNATIVE_PREF_EXISTS=$nativePreferenceExists"
-          if ($nativePreferenceExists) {
-            Write-Host "PSNATIVE_PREF_VALUE=$PSNativeCommandUseErrorActionPreference"
-            $PSNativeCommandUseErrorActionPreference = $false
-            Write-Host "PSNATIVE_PREF_AFTER=$PSNativeCommandUseErrorActionPreference"
-          }
           $evidence = Join-Path $PWD 'artifacts\evidence'
           New-Item -ItemType Directory -Force -Path $evidence | Out-Null
           $exe = Join-Path $PWD 'artifacts\native-preview\win-x64\SysIn.App.exe'
@@ -69,21 +61,10 @@ jobs:
 
           & $exe doctor | Tee-Object -FilePath (Join-Path $evidence 'doctor.txt')
           $doctorExit = $LASTEXITCODE
-          Write-Host "DOCTOR_EXIT=$doctorExit"
           if ($doctorExit -gt 1) { throw "doctor failed unexpectedly with exit code $doctorExit" }
 
-          try {
-            & $exe overview *> (Join-Path $evidence 'overview-noninteractive.txt')
-            $overviewExit = $LASTEXITCODE
-            Write-Host "OVERVIEW_RETURNED=1"
-            Write-Host "OVERVIEW_EXIT=$overviewExit"
-          }
-          catch {
-            Write-Host "OVERVIEW_EXCEPTION=$($_.Exception.GetType().FullName)"
-            Write-Host "OVERVIEW_EXCEPTION_MESSAGE=$($_.Exception.Message)"
-            Write-Host "OVERVIEW_LASTEXITCODE=$LASTEXITCODE"
-            throw
-          }
+          & $exe overview *> (Join-Path $evidence 'overview-noninteractive.txt')
+          $overviewExit = $LASTEXITCODE
           if ($overviewExit -ne 2) { throw "noninteractive overview expected exit code 2, got $overviewExit" }
 
           $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -92,6 +73,7 @@ jobs:
           "rid=win-x64" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
           "doctorExit=$doctorExit" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
           "overviewNoninteractiveExit=$overviewExit" | Add-Content -LiteralPath (Join-Path $evidence 'build.txt') -Encoding ascii
+          exit 0
 
       - name: Upload Overview render captures
         uses: actions/upload-artifact@v4
