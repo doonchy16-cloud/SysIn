@@ -1,0 +1,38 @@
+{
+  "product": "SysIn",
+  "version": "1.1.0",
+  "channel": "stable",
+  "minimumPowerShell": "5.1",
+  "files": [
+    {
+      "target": "SysIn.cmd",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/SysIn.cmd",
+      "sha256": "8d8e8977c17e94b022ee7f6acdeeba826d5d1c355e4a2a069b25c9e87c3ed05f"
+    },
+    {
+      "target": "src/SysIn.ps1",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.ps1",
+      "sha256": "becf39334ae6d159204a705052177feb78973534cd73c11ad8feda1d93bdc4d0"
+    },
+    {
+      "target": "src/SysIn.Core.psm1",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Core.psm1",
+      "sha256": "76adcdc71ba3aa635158d4b1d2e538059ed1e49a19fa9ef53bd32d923bb6cc69"
+    },
+    {
+      "target": "src/SysIn.Config.psm1",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Config.psm1",
+      "sha256": "3bf48fead57d17803c1be314620a62ff80b67d7daac5dc8a11c95e7bdcb0a399"
+    },
+    {
+      "target": "src/SysIn.Update.psm1",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Update.psm1",
+      "sha256": "43596eac3c70913aa045b82a1751c499df46aae9c334b50b950bb55a1d7075ac"
+    },
+    {
+      "target": "uninstall.ps1",
+      "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/uninstall.ps1",
+      "sha256": "b171e27bd8a2dc10f3f876f662dc87dd78251b15253a92a7a6ffaf018738e72b"
+    }
+  ]
+}
