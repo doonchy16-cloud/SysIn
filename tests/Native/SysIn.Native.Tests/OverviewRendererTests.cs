@@ -70,6 +70,21 @@ public sealed class OverviewRendererTests
     }
 
     [Fact]
+    public void Large_overview_keeps_GPU_stack_out_of_lower_card_body()
+    {
+        var frame = new FrameBuffer(160, 45);
+        var model = OverviewViewModel.FromSnapshot(
+            TestFixtures.DualGpuSnapshot(),
+            new RenderStats(19.8, 20.0, TimeSpan.FromMilliseconds(4)));
+
+        new OverviewRenderer().Render(model, frame, SpectrumTheme.Default, LayoutMode.Large);
+
+        var lines = frame.ToPlainText().Split(Environment.NewLine);
+        var lowerCardBodyRow = lines[30];
+        Assert.DoesNotContain('─', lowerCardBodyRow);
+    }
+
+    [Fact]
     public void Large_overview_uses_the_available_terminal_instead_of_forming_a_top_left_island()
     {
         var frame = new FrameBuffer(160, 45);
