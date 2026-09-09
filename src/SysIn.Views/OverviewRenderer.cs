@@ -153,33 +153,38 @@ public sealed class OverviewRenderer
 
         var gridY = summaryY + summaryHeight + 1;
         var availableHeight = frame.Height - gridY - 4;
+        var upperHeight = Math.Max(8, availableHeight / 2);
         var leftWidth = Math.Max(24, (mainWidth * 55) / 100);
         var rightX = mainX + leftWidth + 1;
         var rightWidth = Math.Max(20, mainWidth - leftWidth - 1);
 
-        Components.Panel(frame, mainX, gridY, leftWidth, Math.Max(8, availableHeight / 2), "CPU · LIVE",
+        Components.Panel(frame, mainX, gridY, leftWidth, upperHeight, "CPU · LIVE",
             theme.Cpu.Bright, theme.Surface, theme.TextPrimary);
         frame.WriteText($"{model.CpuUtilization}   {model.CpuName}", mainX + 3, gridY + 2,
             theme.Cpu.Bright, theme.Surface, clip: true);
         frame.WriteText("▁▂▄▆▇▅▃▅▆▄▂▃▅▇▆▃", mainX + 3, gridY + 4,
             theme.Cpu.Mid, theme.Surface, clip: true);
 
-        var gpuPanelHeight = Math.Max(5, availableHeight / Math.Max(2, model.Gpus.Count + 1));
+        var gpuCount = Math.Max(1, model.Gpus.Count);
+        var gpuGap = upperHeight > gpuCount * 4 ? 1 : 0;
+        var gpuPanelHeight = Math.Max(4, (upperHeight - (gpuGap * (gpuCount - 1))) / gpuCount);
         var gpuY = gridY;
+        var upperBottomExclusive = gridY + upperHeight;
         foreach (var gpu in model.Gpus)
         {
+            if (gpuY + gpuPanelHeight > upperBottomExclusive)
+            {
+                break;
+            }
+
             Components.Panel(frame, rightX, gpuY, rightWidth, gpuPanelHeight, "GPU",
                 theme.Gpu.Bright, theme.Surface, theme.TextPrimary);
             frame.WriteText(gpu.Name, rightX + 3, gpuY + 1, theme.TextPrimary, theme.Surface, clip: true);
             frame.WriteText(gpu.Utilization, rightX + 3, gpuY + 2, theme.Gpu.Bright, theme.Surface, clip: true);
-            gpuY += gpuPanelHeight + 1;
-            if (gpuY + gpuPanelHeight > frame.Height - 3)
-            {
-                break;
-            }
+            gpuY += gpuPanelHeight + gpuGap;
         }
 
-        var lowerY = gridY + Math.Max(8, availableHeight / 2) + 1;
+        var lowerY = gridY + upperHeight + 1;
         var lowerHeight = Math.Max(5, frame.Height - lowerY - 3);
         if (lowerY + lowerHeight <= frame.Height - 2)
         {
