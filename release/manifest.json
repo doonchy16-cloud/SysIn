@@ -12,27 +12,27 @@
     {
       "target": "src/SysIn.ps1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.ps1",
-      "sha256": "7575eef52b4353204c9f508da1af41a5f4668959f5b0d30178008add087ee11f"
+      "sha256": "2a8cebc8ca04448b773689f4bc6c5cccb17ccf5f0f423eda31dabcca63c94caa"
     },
     {
       "target": "src/SysIn.Core.psm1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Core.psm1",
-      "sha256": "f4d772f1ee7469bf761433114032b04fe70319f02e085e5bc72960a267061113"
+      "sha256": "b2fe4e061568740ae52abedda5152277434d4964b183090e35db83791d582e3f"
     },
     {
       "target": "src/SysIn.Config.psm1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Config.psm1",
-      "sha256": "1382750a99527f29388e4d532d7591cfa58c108f82c6e70015037ba8155c5414"
+      "sha256": "8c0ec435fbc904bde8df93f5df6746814a3d1db7a6d4555a27225d9d8acd3b2f"
     },
     {
       "target": "src/SysIn.Update.psm1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Update.psm1",
-      "sha256": "43596eac3c70913aa045b82a1751c499df46aae9c334b50b950bb55a1d7075ac"
+      "sha256": "9b73f0116c611f350887695ee3b8c17100306576f732b11c91feb43ebb57f09c"
     },
     {
       "target": "uninstall.ps1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/uninstall.ps1",
-      "sha256": "b171e27bd8a2dc10f3f876f662dc87dd78251b15253a92a7a6ffaf018738e72b"
+      "sha256": "95f9b9d6f148c4750e393a4f7e1cd1070b76fae7d7fa25e4de6cbdd651204fd4"
     }
   ]
 }
