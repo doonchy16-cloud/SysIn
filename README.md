@@ -34,6 +34,8 @@ Invoke-WebRequest 'https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/
 
 The bootstrap installer retrieves the stable release manifest over HTTPS, downloads the known V1.1 runtime files into staging, verifies every runtime file against its published SHA-256 hash, and only then replaces installed files. Existing SysIn-owned files are backed up transactionally and restoration is attempted if replacement fails.
 
+The release CI also downloads the exact public runtime URLs and verifies those published bytes against the same manifest hashes used by the installer. Runtime PowerShell files use canonical LF line endings so Git checkouts and GitHub raw downloads remain byte-stable.
+
 The installer does **not** create a Windows service, scheduled task, machine-wide PATH entry, or permanent execution-policy change.
 
 ### Install from a local clone
@@ -117,7 +119,7 @@ sysin processes -Snapshot
 
 ## Live dashboard controls
 
-The dashboard uses the configured `fps` value as its launch-time render target. The default configuration is **20 FPS**.
+The dashboard uses the configured `fps` value for its launch-time render target. The default configuration is **20 FPS**.
 
 | Key | Action |
 | --- | --- |
@@ -131,7 +133,7 @@ The dashboard uses the configured `fps` value as its launch-time render target. 
 | `R` | Reset tracked min/peak values |
 | `Q` or `Esc` | Exit |
 
-An explicit launch-time render target from 1 through 20 can be requested with `-FPS`; it overrides the configured `fps` value for that launch:
+A launch-time render target from 1 through 20 can be requested with `-FPS`; an explicit `-FPS` value overrides the saved configuration for that launch:
 
 ```powershell
 sysin overview -FPS 10
@@ -177,7 +179,7 @@ sysin config path
 
 V1.1 accepts these keys:
 
-- `fps`: integer from `1` through `20`; used as the dashboard launch-time FPS when no explicit `-FPS` override is supplied
+- `fps`: integer from `1` through `20`
 - `updateChannel`: `stable`
 - `updateCheck`: `manual` or `daily`
 
@@ -233,7 +235,7 @@ Telemetry displayed by SysIn is collected locally from Windows and available har
 
 ## Development and verification
 
-The repository includes a zero-dependency PowerShell test harness and Windows GitHub Actions CI. The suite checks PowerShell parsing, CLI behavior, configuration validation, live telemetry command paths, installer/uninstaller safety, updater verification/rollback behavior, doctor diagnostics, and release-manifest hashes.
+The repository includes a zero-dependency PowerShell test harness and Windows GitHub Actions CI. The suite checks PowerShell parsing, CLI behavior, configuration validation, live telemetry command paths, installer/uninstaller safety, updater verification/rollback behavior, doctor diagnostics, local release-manifest hashes, and the SHA-256 hashes of the exact publicly downloadable runtime bytes.
 
 CI execution validates behavior on the hosted Windows runner; it is not a claim that every optional hardware sensor or vendor provider exists on every Windows machine.
 
