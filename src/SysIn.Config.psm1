@@ -120,6 +120,23 @@ function Get-SysInConfig {
     }
 }
 
+function Get-SysInEffectiveFps {
+    param([string[]]$Arguments = @())
+
+    for ($i = 0; $i -lt $Arguments.Count; $i++) {
+        $token = ([string]$Arguments[$i]).ToLowerInvariant()
+        if ($token -in @('-fps','--fps')) {
+            if ($i + 1 -ge $Arguments.Count) {
+                throw "Missing value for $($Arguments[$i])"
+            }
+            return (ConvertTo-SysInFps $Arguments[$i + 1])
+        }
+    }
+
+    $config = Get-SysInConfig
+    return [int]$config.fps
+}
+
 function Set-SysInConfigValue {
     param(
         [Parameter(Mandatory=$true)][string]$Key,
@@ -146,4 +163,4 @@ function Reset-SysInConfig {
     return $config
 }
 
-Export-ModuleMember -Function Get-SysInConfigPath, Get-SysInConfig, Set-SysInConfigValue, Reset-SysInConfig
+Export-ModuleMember -Function Get-SysInConfigPath, Get-SysInConfig, Get-SysInEffectiveFps, Set-SysInConfigValue, Reset-SysInConfig
