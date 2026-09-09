@@ -44,6 +44,31 @@ public sealed class OverviewRendererTests
         Assert.Contains("[Q] Quit", footer, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(80, 24)]
+    [InlineData(160, 45)]
+    public void Preview_command_bar_advertises_only_keys_implemented_by_the_live_loop(int width, int height)
+    {
+        var frame = new FrameBuffer(width, height);
+        var model = OverviewViewModel.FromSnapshot(
+            TestFixtures.DualGpuSnapshot(),
+            new RenderStats(19.8, 20.0, TimeSpan.FromMilliseconds(4)));
+
+        new OverviewRenderer().Render(
+            model,
+            frame,
+            SpectrumTheme.Default,
+            ResponsiveLayout.Select(frame.Width, frame.Height));
+
+        var footer = frame.ToPlainText().Split(Environment.NewLine)[^1];
+        Assert.Contains("[P] Pause", footer, StringComparison.Ordinal);
+        Assert.Contains("[F] FPS", footer, StringComparison.Ordinal);
+        Assert.Contains("[Q] Quit", footer, StringComparison.Ordinal);
+        Assert.DoesNotContain("[2]", footer, StringComparison.Ordinal);
+        Assert.DoesNotContain("[/]", footer, StringComparison.Ordinal);
+        Assert.DoesNotContain("[?]", footer, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Large_overview_uses_the_available_terminal_instead_of_forming_a_top_left_island()
     {
