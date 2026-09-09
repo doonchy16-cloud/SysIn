@@ -13,10 +13,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Parse PowerShell sources
+      - name: Parse PowerShell 7 sources
         shell: pwsh
         run: ./tests/Parse.Tests.ps1
 
-      - name: Run behavior tests
+      - name: Run PowerShell 7 behavior tests
         shell: pwsh
+        env:
+          SYSIN_TEST_HOST: pwsh
         run: ./tests/Run.Tests.ps1
+
+      - name: Parse Windows PowerShell 5.1 sources
+        shell: powershell
+        run: .\tests\Parse.Tests.ps1
+
+      - name: Run Windows PowerShell 5.1 behavior tests
+        shell: powershell
+        env:
+          SYSIN_TEST_HOST: powershell.exe
+        run: .\tests\Run.Tests.ps1
