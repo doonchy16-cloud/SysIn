@@ -1,9 +1,10 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $cli = Join-Path $repoRoot 'src\SysIn.ps1'
+$testHost = if ([string]::IsNullOrWhiteSpace($env:SYSIN_TEST_HOST)) { 'pwsh' } else { $env:SYSIN_TEST_HOST }
 
 function Invoke-SysInCliTest {
     param([string[]]$Arguments)
-    $output = & pwsh -NoLogo -NoProfile -File $cli @Arguments 2>&1 | Out-String
+    $output = & $testHost -NoLogo -NoProfile -File $cli @Arguments 2>&1 | Out-String
     [pscustomobject]@{
         Output = $output.Trim()
         ExitCode = $LASTEXITCODE
