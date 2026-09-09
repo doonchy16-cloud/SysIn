@@ -31,6 +31,7 @@ foreach ($command in @(
 )) {
     Assert-SysInMatch $result.Output ([regex]::Escape($command)) "help lists $command"
 }
+Assert-SysInTrue ($result.Output -notmatch '(?i)\bcompact\b') 'help does not advertise unsupported Compact layout'
 
 $result = Invoke-SysInCliTest @('about')
 Assert-SysInEqual $result.ExitCode 0 "about exits 0`nCaptured output:`n$($result.Output)"
