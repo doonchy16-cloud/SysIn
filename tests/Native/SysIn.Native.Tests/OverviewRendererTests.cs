@@ -27,6 +27,24 @@ public sealed class OverviewRendererTests
     }
 
     [Fact]
+    public void Medium_overview_keeps_the_Quit_command_complete_at_100x30()
+    {
+        var frame = new FrameBuffer(100, 30);
+        var model = OverviewViewModel.FromSnapshot(
+            TestFixtures.DualGpuSnapshot(),
+            new RenderStats(19.8, 20.0, TimeSpan.FromMilliseconds(4)));
+
+        new OverviewRenderer().Render(
+            model,
+            frame,
+            SpectrumTheme.Default,
+            ResponsiveLayout.Select(frame.Width, frame.Height));
+
+        var footer = frame.ToPlainText().Split(Environment.NewLine)[^1];
+        Assert.Contains("[Q] Quit", footer, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Large_overview_uses_the_available_terminal_instead_of_forming_a_top_left_island()
     {
         var frame = new FrameBuffer(160, 45);
