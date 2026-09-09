@@ -117,7 +117,7 @@ sysin processes -Snapshot
 
 ## Live dashboard controls
 
-The dashboard targets **20 FPS** by default.
+The dashboard uses the configured `fps` value as its launch-time render target. The default configuration is **20 FPS**.
 
 | Key | Action |
 | --- | --- |
@@ -131,7 +131,7 @@ The dashboard targets **20 FPS** by default.
 | `R` | Reset tracked min/peak values |
 | `Q` or `Esc` | Exit |
 
-A launch-time render target from 1 through 20 can be requested with `-FPS`:
+An explicit launch-time render target from 1 through 20 can be requested with `-FPS`; it overrides the configured `fps` value for that launch:
 
 ```powershell
 sysin overview -FPS 10
@@ -177,7 +177,7 @@ sysin config path
 
 V1.1 accepts these keys:
 
-- `fps`: integer from `1` through `20`
+- `fps`: integer from `1` through `20`; used as the dashboard launch-time FPS when no explicit `-FPS` override is supplied
 - `updateChannel`: `stable`
 - `updateCheck`: `manual` or `daily`
 
