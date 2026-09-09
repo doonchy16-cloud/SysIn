@@ -78,9 +78,41 @@ function Write-StorageView{$s=Get-SysInSystemInfo;$i=Get-IoTelemetry $s.SystemDr
 function Write-NetworkView{$s=Get-SysInSystemInfo;$i=Get-IoTelemetry $s.SystemDrive;Write-Output "SysIn v$script:SysInVersion | NETWORK";Write-Output "Download $(Format-Rate $i.NetDown) | Upload $(Format-Rate $i.NetUp)";try{foreach($n in @(Get-CimInstance Win32_NetworkAdapter -Filter 'NetEnabled=True' -ErrorAction SilentlyContinue)){Write-Output "Adapter: $($n.Name) | Speed $(Format-Rate ([double]$n.Speed))"}}catch{}}
 function Write-SensorsView{$g=Get-GpuTelemetry (Get-NvidiaSmiPath);Write-Output "SysIn v$script:SysInVersion | SENSORS";Write-Output ('GPU temperature: '+$(if($null-eq$g.TempC){'N/A'}else{"$($g.TempC) C"}));Write-Output ('GPU power: '+$(if($null-eq$g.PowerW){'N/A'}else{"$($g.PowerW) W"}));Write-Output ('GPU fan: '+$(if($null-eq$g.FanPercent){'N/A'}else{"$($g.FanPercent)%"}));$t=$null;try{$z=Get-CimInstance -Namespace root/wmi MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue|Select-Object -First 1;if($z){$t=[math]::Round(([double]$z.CurrentTemperature/10.0)-273.15,1)}}catch{};Write-Output ('CPU/ACPI temperature: '+$(if($null-eq$t){'N/A'}else{"$t C"}))}
 function Write-CapabilitiesView{$c=Get-SysInCapabilities;Write-Output "SysIn v$script:SysInVersion | CAPABILITIES";foreach($p in @('CpuMemory','WindowsGpuCounters','NvidiaSmi','CpuTemperature','StorageNetwork','Battery')){Write-Output ('{0,-22} {1}'-f$p,$c.$p)}}
-function Write-DoctorView{Write-Output "SysIn v$script:SysInVersion | DOCTOR";Write-Output ('Windows runtime              '+$(if(Test-SysInWindows){'PASS'}else{'FAIL'}));Write-Output ('PowerShell                   '+$(if($PSVersionTable.PSVersion.Major-ge5){'PASS'}else{'FAIL'}));foreach($f in @('SysIn.ps1','SysIn.Core.psm1','SysIn.Config.psm1')){Write-Output ('{0,-28} {1}'-f$f,$(if(Test-Path -LiteralPath(Join-Path $PSScriptRoot $f)){'PASS'}else{'FAIL'}))};$c=Get-SysInCapabilities;Write-Output ('GPU provider                 '+$(if($c.NvidiaSmi-or$c.WindowsGpuCounters){'PASS'}else{'PARTIAL'}))}
+
+function Normalize-SysInDoctorPath([string]$Path){if([string]::IsNullOrWhiteSpace($Path)){return ''};$Path.Trim().TrimEnd('\','/').ToLowerInvariant()}
+function Invoke-SysInDoctor {
+    [CmdletBinding()]
+    param(
+        [string]$InstallRoot = (Split-Path -Parent $PSScriptRoot),
+        [string]$UserPath
+    )
+
+    $checks = New-Object System.Collections.Generic.List[object]
+    $checks.Add([pscustomobject]@{Name='Windows runtime';Status=$(if(Test-SysInWindows){'PASS'}else{'FAIL'});Detail=[Environment]::OSVersion.VersionString})
+    $checks.Add([pscustomobject]@{Name='PowerShell version';Status=$(if($PSVersionTable.PSVersion -ge [version]'5.1'){'PASS'}else{'FAIL'});Detail=[string]$PSVersionTable.PSVersion})
+
+    $required = @('SysIn.cmd','src\SysIn.ps1','src\SysIn.Core.psm1','src\SysIn.Config.psm1','src\SysIn.Update.psm1','uninstall.ps1')
+    $missing = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $InstallRoot $_) -PathType Leaf) })
+    $checks.Add([pscustomobject]@{Name='Runtime files';Status=$(if($missing.Count -eq 0){'PASS'}else{'FAIL'});Detail=$(if($missing.Count -eq 0){'all required files present'}else{'missing: '+($missing -join ', ')})})
+
+    if($PSBoundParameters.ContainsKey('UserPath')){$pathValue=$UserPath}else{$pathValue=[Environment]::GetEnvironmentVariable('Path',[EnvironmentVariableTarget]::User)}
+    $target=Normalize-SysInDoctorPath $InstallRoot;$pathRegistered=$false
+    foreach($entry in @([string]$pathValue -split ';')){if((Normalize-SysInDoctorPath $entry)-eq$target){$pathRegistered=$true;break}}
+    $checks.Add([pscustomobject]@{Name='User PATH';Status=$(if($pathRegistered){'PASS'}else{'PARTIAL'});Detail=$(if($pathRegistered){'install directory registered'}else{'install directory is not registered in current-user PATH'})})
+
+    $configModule=Join-Path $PSScriptRoot 'SysIn.Config.psm1'
+    try{Import-Module $configModule -Force -ErrorAction Stop;$null=Get-SysInConfig -ErrorAction Stop;$configStatus='PASS';$configDetail='configuration is valid (or defaults are active)'}catch{$configStatus='FAIL';$configDetail=$_.Exception.Message}
+    $checks.Add([pscustomobject]@{Name='Configuration';Status=$configStatus;Detail=$configDetail})
+
+    try{$c=Get-SysInCapabilities;$gpuAvailable=[bool]($c.NvidiaSmi -or $c.WindowsGpuCounters);$providerStatus=if($c.CpuMemory -and $c.StorageNetwork -and $gpuAvailable){'PASS'}elseif($c.CpuMemory -and $c.StorageNetwork){'PARTIAL'}else{'FAIL'};$providerDetail="CPU/RAM=$($c.CpuMemory); WindowsGPU=$($c.WindowsGpuCounters); NVIDIA=$($c.NvidiaSmi); CPUtemp=$($c.CpuTemperature); Storage/Network=$($c.StorageNetwork); Battery=$($c.Battery)"}catch{$providerStatus='FAIL';$providerDetail=$_.Exception.Message}
+    $checks.Add([pscustomobject]@{Name='Providers';Status=$providerStatus;Detail=$providerDetail})
+
+    $overall=if(@($checks|Where-Object Status -eq 'FAIL').Count -gt 0){'FAIL'}elseif(@($checks|Where-Object Status -eq 'PARTIAL').Count -gt 0){'PARTIAL'}else{'PASS'}
+    [pscustomobject]@{OverallStatus=$overall;Checks=@($checks)}
+}
+function Write-DoctorView{$d=Invoke-SysInDoctor;Write-Output "SysIn v$script:SysInVersion | DOCTOR";foreach($check in @($d.Checks)){Write-Output ('{0,-28} {1,-7} {2}'-f$check.Name,$check.Status,$check.Detail)};Write-Output ('Overall                      '+$d.OverallStatus)}
 function HasOpt([string[]]$a,[string[]]$n){foreach($x in $a){if($x.ToLowerInvariant()-in$n){return $true}};$false}
 function GetOptInt([string[]]$a,[string[]]$n,[int]$d){for($i=0;$i-lt$a.Count;$i++){if($a[$i].ToLowerInvariant()-in$n){if($i+1-ge$a.Count){throw "Missing value for $($a[$i])"};$v=0;if(-not[int]::TryParse($a[$i+1],[ref]$v)){throw "Invalid integer '$($a[$i+1])'"};return$v}};$d}
 function Invoke-SysInCommand{param([Parameter(Mandatory=$true)][string]$Command,[string[]]$Arguments=@());$fps=GetOptInt $Arguments @('-fps','--fps') 20;if($fps-lt1-or$fps-gt20){throw 'FPS must be from 1 through 20.'};$compact=HasOpt $Arguments @('-compact','--compact');$snap=HasOpt $Arguments @('-snapshot','--snapshot');switch($Command.ToLowerInvariant()){'overview'{Invoke-SysIn -FPS $fps -InitialPage Overview -Compact:$compact -Snapshot:$snap};'cpu'{Invoke-SysIn -FPS $fps -InitialPage CPU -Compact:$compact -Snapshot:$snap};'gpu'{Invoke-SysIn -FPS $fps -InitialPage GPU -Compact:$compact -Snapshot:$snap};'memory'{Invoke-SysIn -FPS $fps -InitialPage Memory -Compact:$compact -Snapshot:$snap};'processes'{Invoke-SysIn -FPS $fps -InitialPage Processes -Compact:$compact -Snapshot:$snap};'snapshot'{Invoke-SysIn -FPS $fps -Snapshot};'system'{Write-SystemView};'storage'{Write-StorageView};'network'{Write-NetworkView};'sensors'{Write-SensorsView};'capabilities'{Write-CapabilitiesView};'doctor'{Write-DoctorView};default{throw "Unknown SysIn command '$Command'. Run 'sysin help'."}}}
 
-Export-ModuleMember -Function Invoke-SysIn,Invoke-SysInCommand,Get-SysInSystemInfo,Get-SysInCapabilities
+Export-ModuleMember -Function Invoke-SysIn,Invoke-SysInCommand,Get-SysInSystemInfo,Get-SysInCapabilities,Invoke-SysInDoctor
