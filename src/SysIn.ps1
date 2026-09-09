@@ -63,10 +63,28 @@ ALIASES
 }
 function Resolve-SysInCommand {
     param([string[]]$Tokens)
-    if($null-eq$Tokens-or$Tokens.Count-eq0){return'overview'}
-    $first=[string]$Tokens[0]
-    switch -Regex($first.ToLowerInvariant()){
-      '^(-version|--version|-v|version)$'{return'version'};'^(-help|--help|-h|help)$'{return'help'};'^(-cpu|cpu)$'{return'cpu'};'^(-gpu|gpu)$'{return'gpu'};'^(-memory|-ram|memory|ram)$'{return'memory'};'^(-storage|-disk|storage|disk)$'{return'storage'};'^(-network|-net|network|net)$'{return'network'};'^(-processes|processes)$'{return'processes'};'^(-sensors|-temps|sensors|temps)$'{return'sensors'};'^(-system|system)$'{return'system'};'^(-snapshot|snapshot)$'{return'snapshot'};'^(-checkupdate|check-update)$'{return'check-update'};'^(-update|update)$'{return'update'};'^config$'{return'config'};'^doctor$'{return'doctor'};'^capabilities$'{return'capabilities'};'^about$'{return'about'};'^overview$'{return'overview'};default{return $first.ToLowerInvariant()}
+    if ($null -eq $Tokens -or $Tokens.Count -eq 0) { return 'overview' }
+    $first = [string]$Tokens[0]
+    switch -Regex ($first.ToLowerInvariant()) {
+      '^(-version|--version|-v|version)$' { return 'version' }
+      '^(-help|--help|-h|help)$' { return 'help' }
+      '^(-cpu|cpu)$' { return 'cpu' }
+      '^(-gpu|gpu)$' { return 'gpu' }
+      '^(-memory|-ram|memory|ram)$' { return 'memory' }
+      '^(-storage|-disk|storage|disk)$' { return 'storage' }
+      '^(-network|-net|network|net)$' { return 'network' }
+      '^(-processes|processes)$' { return 'processes' }
+      '^(-sensors|-temps|sensors|temps)$' { return 'sensors' }
+      '^(-system|system)$' { return 'system' }
+      '^(-snapshot|snapshot)$' { return 'snapshot' }
+      '^(-checkupdate|check-update)$' { return 'check-update' }
+      '^(-update|update)$' { return 'update' }
+      '^config$' { return 'config' }
+      '^doctor$' { return 'doctor' }
+      '^capabilities$' { return 'capabilities' }
+      '^about$' { return 'about' }
+      '^overview$' { return 'overview' }
+      default { return $first.ToLowerInvariant() }
     }
 }
 function Invoke-SysInConfigCommand {
