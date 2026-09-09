@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\SysIn.Core\SysIn.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\SysIn.Core\SysIn.Core.csproj" />
+    <ProjectReference Include="..\SysIn.Telemetry\SysIn.Telemetry.csproj" />
+  </ItemGroup>
+</Project>

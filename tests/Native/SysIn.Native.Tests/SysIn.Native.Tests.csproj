@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\SysIn.Core\SysIn.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Telemetry\SysIn.Telemetry.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Providers\SysIn.Providers.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Terminal\SysIn.Terminal.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Views\SysIn.Views.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Platform.Windows\SysIn.Platform.Windows.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.Cli\SysIn.Cli.csproj" />
+    <ProjectReference Include="..\..\..\src\SysIn.App\SysIn.App.csproj" />
+  </ItemGroup>
+</Project>
