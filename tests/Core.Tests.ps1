@@ -61,6 +61,6 @@ Invoke-CoreCliSnapshotTest @('storage') 'STORAGE'
 Invoke-CoreCliSnapshotTest @('network') 'NETWORK'
 Invoke-CoreCliSnapshotTest @('sensors') 'SENSORS'
 Invoke-CoreCliSnapshotTest @('capabilities') 'CAPABILITIES'
-Invoke-CoreCliSnapshotTest @('doctor') 'DOCTOR.*Runtime files.*User PATH.*Configuration.*Providers'
+Invoke-CoreCliSnapshotTest @('doctor') '(?s)DOCTOR.*Runtime files.*User PATH.*Configuration.*Providers'
 
 Remove-Module SysIn.Core -Force -ErrorAction SilentlyContinue
