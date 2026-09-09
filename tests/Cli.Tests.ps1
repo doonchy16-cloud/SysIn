@@ -11,18 +11,18 @@ function Invoke-SysInCliTest {
 }
 
 $result = Invoke-SysInCliTest @('version')
-Assert-SysInEqual $result.ExitCode 0 'canonical version command exits 0'
+Assert-SysInEqual $result.ExitCode 0 "canonical version command exits 0`nCaptured output:`n$($result.Output)"
 Assert-SysInMatch $result.Output 'SysIn 1\.1\.0' 'canonical version reports 1.1.0'
 Assert-SysInMatch $result.Output 'stable' 'canonical version reports stable channel'
 
 foreach ($alias in @('--version','-v','-Version')) {
     $result = Invoke-SysInCliTest @($alias)
-    Assert-SysInEqual $result.ExitCode 0 "$alias exits 0"
+    Assert-SysInEqual $result.ExitCode 0 "$alias exits 0`nCaptured output:`n$($result.Output)"
     Assert-SysInMatch $result.Output 'SysIn 1\.1\.0' "$alias reports 1.1.0"
 }
 
 $result = Invoke-SysInCliTest @('help')
-Assert-SysInEqual $result.ExitCode 0 'help exits 0'
+Assert-SysInEqual $result.ExitCode 0 "help exits 0`nCaptured output:`n$($result.Output)"
 foreach ($command in @(
     'overview','cpu','gpu','memory','storage','network','processes','sensors',
     'system','snapshot','doctor','capabilities','version','check-update','update',
@@ -32,6 +32,6 @@ foreach ($command in @(
 }
 
 $result = Invoke-SysInCliTest @('about')
-Assert-SysInEqual $result.ExitCode 0 'about exits 0'
+Assert-SysInEqual $result.ExitCode 0 "about exits 0`nCaptured output:`n$($result.Output)"
 Assert-SysInMatch $result.Output 'doonchy16-cloud/SysIn' 'about shows repository'
 Assert-SysInMatch $result.Output 'Windows System Intelligence' 'about describes the product'
