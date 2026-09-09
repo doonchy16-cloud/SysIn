@@ -52,8 +52,7 @@ CONFIG
   sysin config path
 
 GLOBAL OPTIONS
-  -FPS <1-20>    Dashboard render target (default 20)
-  -Compact       Compact dashboard layout
+  -FPS <1-20>    Override the configured dashboard render target
 
 ALIASES
   -CPU -GPU -Memory -Storage -Network -Processes -Sensors -System
