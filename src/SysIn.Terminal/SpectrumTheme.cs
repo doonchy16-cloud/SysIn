@@ -1,0 +1,42 @@
+namespace SysIn.Terminal;
+
+public sealed record SpectrumPalette(Rgb24 Deep, Rgb24 Mid, Rgb24 Bright);
+
+public sealed record SpectrumTheme(
+    Rgb24 Background,
+    Rgb24 Surface,
+    Rgb24 Raised,
+    Rgb24 TextPrimary,
+    Rgb24 TextSecondary,
+    Rgb24 Brand,
+    SpectrumPalette Cpu,
+    SpectrumPalette Gpu,
+    SpectrumPalette Memory,
+    SpectrumPalette Storage,
+    SpectrumPalette Network,
+    SpectrumPalette Processes,
+    Rgb24 Critical,
+    Rgb24 Warning,
+    Rgb24 Elevated,
+    Rgb24 Info,
+    Rgb24 Unknown)
+{
+    public static readonly SpectrumTheme Default = new(
+        new Rgb24(0x07, 0x11, 0x1F),
+        new Rgb24(0x0B, 0x16, 0x27),
+        new Rgb24(0x10, 0x20, 0x3A),
+        new Rgb24(0xF8, 0xFA, 0xFC),
+        new Rgb24(0x94, 0xA3, 0xB8),
+        new Rgb24(0xA7, 0x8B, 0xFA),
+        new SpectrumPalette(new Rgb24(0x15, 0x5E, 0xEF), new Rgb24(0x2E, 0x90, 0xFA), new Rgb24(0x22, 0xD3, 0xEE)),
+        new SpectrumPalette(new Rgb24(0x10, 0xB9, 0x81), new Rgb24(0x22, 0xC5, 0x5E), new Rgb24(0x2D, 0xD4, 0xBF)),
+        new SpectrumPalette(new Rgb24(0x7C, 0x3A, 0xED), new Rgb24(0xA8, 0x55, 0xF7), new Rgb24(0xEC, 0x48, 0x99)),
+        new SpectrumPalette(new Rgb24(0xF5, 0x9E, 0x0B), new Rgb24(0xF9, 0x73, 0x16), new Rgb24(0xFB, 0xBF, 0x24)),
+        new SpectrumPalette(new Rgb24(0x06, 0xB6, 0xD4), new Rgb24(0x22, 0xD3, 0xEE), new Rgb24(0x2D, 0xD4, 0xBF)),
+        new SpectrumPalette(new Rgb24(0xEA, 0xB3, 0x08), new Rgb24(0xFA, 0xCC, 0x15), new Rgb24(0x84, 0xCC, 0x16)),
+        new Rgb24(0xEF, 0x44, 0x44),
+        new Rgb24(0xF9, 0x73, 0x16),
+        new Rgb24(0xFA, 0xCC, 0x15),
+        new Rgb24(0x3B, 0x82, 0xF6),
+        new Rgb24(0x94, 0xA3, 0xB8));
+}
