@@ -22,7 +22,7 @@
     {
       "target": "src/SysIn.Config.psm1",
       "url": "https://raw.githubusercontent.com/doonchy16-cloud/SysIn/main/src/SysIn.Config.psm1",
-      "sha256": "3bf48fead57d17803c1be314620a62ff80b67d7daac5dc8a11c95e7bdcb0a399"
+      "sha256": "1382750a99527f29388e4d532d7591cfa58c108f82c6e70015037ba8155c5414"
     },
     {
       "target": "src/SysIn.Update.psm1",
