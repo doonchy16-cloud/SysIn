@@ -77,4 +77,41 @@ Invoke-CoreCliSnapshotTest @('sensors') 'SENSORS'
 Invoke-CoreCliSnapshotTest @('capabilities') 'CAPABILITIES'
 Invoke-CoreCliSnapshotTest @('doctor') '(?s)DOCTOR.*Runtime files.*User PATH.*Configuration.*Providers'
 
+$fpsLocalApp = Join-Path ([IO.Path]::GetTempPath()) ('sysin-core-fps-' + [guid]::NewGuid().ToString('N'))
+$oldFpsLocalApp = $env:LOCALAPPDATA
+try {
+    $env:LOCALAPPDATA = $fpsLocalApp
+    $configModule = Join-Path $repoRoot 'src\SysIn.Config.psm1'
+    Import-Module $configModule -Force
+    [void](Set-SysInConfigValue -Key 'fps' -Value '12')
+
+    $coreModule = Get-Module SysIn.Core
+    $configuredFps = & $coreModule {
+        $script:CapturedDashboardFps = $null
+        function Invoke-SysIn {
+            param(
+                [int]$FPS = 20,
+                [string]$InitialPage = 'Overview',
+                [switch]$Compact,
+                [switch]$Snapshot
+            )
+            $script:CapturedDashboardFps = $FPS
+        }
+        Invoke-SysInCommand -Command 'overview' -Arguments @()
+        return $script:CapturedDashboardFps
+    }
+    Assert-SysInEqual $configuredFps 12 'dashboard dispatcher uses persisted FPS when CLI override is absent'
+
+    $overrideFps = & $coreModule {
+        $script:CapturedDashboardFps = $null
+        Invoke-SysInCommand -Command 'overview' -Arguments @('-FPS','7')
+        return $script:CapturedDashboardFps
+    }
+    Assert-SysInEqual $overrideFps 7 'dashboard dispatcher gives explicit FPS precedence over persisted configuration'
+} finally {
+    $env:LOCALAPPDATA = $oldFpsLocalApp
+    Remove-Module SysIn.Config -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $fpsLocalApp -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 Remove-Module SysIn.Core -Force -ErrorAction SilentlyContinue
