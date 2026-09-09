@@ -5,7 +5,7 @@ $core = Join-Path $repoRoot 'src\SysIn.Core.psm1'
 Import-Module $core -Force
 
 $commands = Get-Command -Module SysIn.Core | Select-Object -ExpandProperty Name
-foreach ($required in @('Invoke-SysIn','Invoke-SysInCommand','Get-SysInSystemInfo','Get-SysInCapabilities')) {
+foreach ($required in @('Invoke-SysIn','Invoke-SysInCommand','Get-SysInSystemInfo','Get-SysInCapabilities','Invoke-SysInDoctor')) {
     Assert-SysInTrue ($required -in $commands) "core exports $required"
 }
 
@@ -18,6 +18,31 @@ $cap = Get-SysInCapabilities
 Assert-SysInTrue ($null -ne $cap.CpuMemory) 'capabilities exposes CPU/memory support state'
 Assert-SysInTrue ($null -ne $cap.NvidiaSmi) 'capabilities exposes NVIDIA SMI state'
 Assert-SysInTrue ($null -ne $cap.Battery) 'capabilities exposes battery state'
+
+$doctorLocalApp = Join-Path ([IO.Path]::GetTempPath()) ('sysin-doctor-' + [guid]::NewGuid().ToString('N'))
+$oldLocalApp = $env:LOCALAPPDATA
+try {
+    $env:LOCALAPPDATA = $doctorLocalApp
+    $doctor = Invoke-SysInDoctor -InstallRoot $repoRoot -UserPath $repoRoot
+    $checks = @{}
+    foreach ($check in @($doctor.Checks)) { $checks[[string]$check.Name] = [string]$check.Status }
+    Assert-SysInEqual $checks['Windows runtime'] 'PASS' 'doctor verifies Windows runtime'
+    Assert-SysInEqual $checks['PowerShell version'] 'PASS' 'doctor verifies PowerShell version'
+    Assert-SysInEqual $checks['Runtime files'] 'PASS' 'doctor verifies complete required runtime set'
+    Assert-SysInEqual $checks['User PATH'] 'PASS' 'doctor verifies current-user PATH registration'
+    Assert-SysInEqual $checks['Configuration'] 'PASS' 'doctor treats absent config file as valid defaults'
+    Assert-SysInTrue ($checks['Providers'] -in @('PASS','PARTIAL')) 'doctor reports provider availability without fabricating support'
+
+    $configDir = Join-Path $doctorLocalApp 'SysIn'
+    New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    [IO.File]::WriteAllText((Join-Path $configDir 'config.json'),'{not-valid-json')
+    $badDoctor = Invoke-SysInDoctor -InstallRoot $repoRoot -UserPath $repoRoot
+    $badConfig = @($badDoctor.Checks | Where-Object Name -eq 'Configuration')[0]
+    Assert-SysInEqual ([string]$badConfig.Status) 'FAIL' 'doctor reports invalid configuration as FAIL'
+} finally {
+    $env:LOCALAPPDATA = $oldLocalApp
+    Remove-Item -LiteralPath $doctorLocalApp -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 function Invoke-CoreCliSnapshotTest {
     param([string[]]$Arguments, [string]$ExpectedPattern)
@@ -36,5 +61,6 @@ Invoke-CoreCliSnapshotTest @('storage') 'STORAGE'
 Invoke-CoreCliSnapshotTest @('network') 'NETWORK'
 Invoke-CoreCliSnapshotTest @('sensors') 'SENSORS'
 Invoke-CoreCliSnapshotTest @('capabilities') 'CAPABILITIES'
+Invoke-CoreCliSnapshotTest @('doctor') 'DOCTOR.*Runtime files.*User PATH.*Configuration.*Providers'
 
 Remove-Module SysIn.Core -Force -ErrorAction SilentlyContinue
