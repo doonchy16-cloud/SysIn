@@ -15,11 +15,11 @@ public sealed class WindowsCollectorContractTests
         }
 
         var provider = new WindowsProvider(TimeProvider.System);
-        var devices = await provider.DiscoverAsync(CancellationToken.None);
+        var devices = await provider.DiscoverAsync(TestContext.Current.CancellationToken);
 
-        Assert.Single(devices.Where(device => device.Kind == DeviceKind.Cpu));
-        Assert.Single(devices.Where(device => device.Kind == DeviceKind.Memory));
-        Assert.Single(devices.Where(device => device.Kind == DeviceKind.System));
+        Assert.Single(devices, device => device.Kind == DeviceKind.Cpu);
+        Assert.Single(devices, device => device.Kind == DeviceKind.Memory);
+        Assert.Single(devices, device => device.Kind == DeviceKind.System);
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public sealed class WindowsCollectorContractTests
         }
 
         var provider = new WindowsProvider(TimeProvider.System);
-        var gpus = (await provider.DiscoverAsync(CancellationToken.None))
+        var gpus = (await provider.DiscoverAsync(TestContext.Current.CancellationToken))
             .Where(device => device.Kind == DeviceKind.Gpu)
             .ToArray();
 
@@ -49,7 +49,7 @@ public sealed class WindowsCollectorContractTests
         }
 
         var provider = new WindowsProvider(TimeProvider.System);
-        await provider.DiscoverAsync(CancellationToken.None);
+        await provider.DiscoverAsync(TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(
             provider.Capabilities,
@@ -65,12 +65,12 @@ public sealed class WindowsCollectorContractTests
         }
 
         var provider = new WindowsProvider(TimeProvider.System);
-        var devices = await provider.DiscoverAsync(CancellationToken.None);
+        var devices = await provider.DiscoverAsync(TestContext.Current.CancellationToken);
         var collectors = provider.CreateCollectors(devices);
 
         foreach (var collector in collectors)
         {
-            var observations = await collector.CollectAsync(CancellationToken.None);
+            var observations = await collector.CollectAsync(TestContext.Current.CancellationToken);
             Assert.All(
                 observations.Where(observation => observation.Availability != MetricAvailability.Available),
                 observation => Assert.Null(observation.Value));

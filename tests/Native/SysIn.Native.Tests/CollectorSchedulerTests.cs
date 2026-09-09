@@ -38,25 +38,26 @@ public sealed class CollectorSchedulerTests
     [Fact]
     public async Task Collectors_run_independently_at_their_own_cadence_and_pause_stops_collection()
     {
+        var cancellationToken = TestContext.Current.CancellationToken;
         var fast = new CountingCollector("fast", TimeSpan.FromMilliseconds(10));
         var slow = new CountingCollector("slow", TimeSpan.FromMilliseconds(60));
         var store = new TelemetryStore(new FreshnessPolicy());
         var supervisor = new CollectorSupervisor(TimeProvider.System);
 
         await using var scheduler = new CollectorScheduler(
-            [fast, slow], supervisor, store, new RealDelay(), CancellationToken.None);
+            [fast, slow], supervisor, store, new RealDelay(), cancellationToken);
 
         scheduler.Start();
-        await Task.Delay(180);
+        await Task.Delay(180, cancellationToken);
 
         Assert.True(fast.Count > slow.Count, $"fast={fast.Count}, slow={slow.Count}");
         Assert.True(slow.Count >= 1);
 
         scheduler.SetPaused(true);
-        await Task.Delay(80);
+        await Task.Delay(80, cancellationToken);
         var fastPaused = fast.Count;
         var slowPaused = slow.Count;
-        await Task.Delay(80);
+        await Task.Delay(80, cancellationToken);
 
         Assert.Equal(fastPaused, fast.Count);
         Assert.Equal(slowPaused, slow.Count);
